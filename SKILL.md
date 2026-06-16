@@ -532,6 +532,76 @@ Work through all documents in this directory until complete. Do not stop until e
 
 ## Troubleshooting
 
+### Parallel Mode Issues
+
+**Subagent Stuck in [>] State**
+
+**Symptom:** Item shows `[>] item.txt (agent-N)` but subagent N is dead.
+
+**Solution:**
+1. Manually change `[>]` back to `[ ]` in todos.md
+2. Running subagents will claim and process it
+3. If no subagents running, restart parallel batch processing (it will skip `[x]` items)
+
+**Duplicate Findings After Merge**
+
+**Symptom:** Same quote appears twice in insights.md from different sources.
+
+**Cause:** Two items contained the same quote (expected) OR race condition (rare).
+
+**Solution:**
+1. Check source filenames - if different files, duplicates are legitimate
+2. If same file, race condition occurred - manually deduplicate
+3. Re-run batch for affected items if needed
+
+**Merge Failed Mid-Process**
+
+**Symptom:** All todos.md items are `[x]` but insights.md missing or incomplete.
+
+**State:** insights-1.md through insights-N.md still exist.
+
+**Recovery:**
+1. Read each insights-N.md file
+2. Manually combine by category into insights.md, OR
+3. Create simple script to merge:
+
+```python
+import glob
+
+findings = {}
+for file in glob.glob("insights-*.md"):
+    with open(file) as f:
+        content = f.read()
+    # Parse by category headers (##)
+    # Append to findings[category]
+    
+with open("insights.md", "w") as out:
+    for category, items in findings.items():
+        out.write(f"## {category}\n")
+        for item in items:
+            out.write(f"{item}\n")
+```
+
+**Uneven Load Distribution**
+
+**Symptom:** Some subagents finish quickly, others still processing.
+
+**Cause:** Item complexity varies (some files longer/more complex).
+
+**Expected:** Work-stealing handles this - fast subagents finish early, slow ones keep working.
+
+**Not a problem** unless one subagent is stuck (see "Subagent Stuck" above).
+
+**Progress Monitoring Shows Wrong Count**
+
+**Symptom:** Coordinator reports "30/50 complete" but you see different counts.
+
+**Cause:** todos.md read at different time, or subagent just updated.
+
+**Solution:**
+- Wait for next 30s update - counts will sync
+- Manually count `[x]` items in todos.md to verify
+
 ### Session Interrupted (You Stopped Mid-Batch)
 
 **Symptom:** You stopped the AI mid-processing and want to resume later.

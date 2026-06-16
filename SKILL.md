@@ -30,15 +30,15 @@ The batch-processing skill supports two execution modes:
 **Sequential Mode:**
 - Single AI processes items one by one
 - Simpler coordination, lower resource usage
-- Best for: Small batches (< 20 items), simple tasks, resource-constrained environments
-- Time: ~2min per item (10 items = 20min, 50 items = 100min)
+- Best for: Small batches (<= 20 items), simple tasks, resource-constrained environments
+- Time: ~2min per item (10 items = 20min, 20 items = 40min)
 
 **Parallel Mode:**
 - Coordinator spawns multiple subagents (1 per 10 items, max 5)
 - Subagents work-steal from shared todos.md
 - Faster completion, higher resource usage
-- Best for: Large batches (20+ items), time-sensitive work, sufficient resources
-- Time: ~2min per item / N agents (50 items with 5 agents = 20min)
+- Best for: Large batches (> 20 items), time-sensitive work, sufficient resources
+- Time: ~2min per item / N agents (10 items with 1 agent = 20min, 50 items with 5 agents = 20min)
 
 **Mode Selection:**
 At setup, you'll be asked: "Process sequentially or in parallel?"

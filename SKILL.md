@@ -25,7 +25,7 @@ Batch processing is a structured system for processing multiple data items (file
 
 ## Detection Pattern
 
-When you (Claude) encounter a request like:
+When the AI encounters a request like:
 - "Analyze all the [files/transcripts/tickets] in [location]"
 - "Extract [information] from these [documents]"
 - "Process all [items] and find [patterns]"
@@ -43,6 +43,7 @@ When you (Claude) encounter a request like:
    - Enumerate files to create todos.md
    - Create empty insights.md
    - Begin processing loop
+   - **Work through all items until complete - do not stop until every item in todos.md is checked off**
 
 ## Quick Reference
 
@@ -57,6 +58,18 @@ When you (Claude) encounter a request like:
 3. Check off item in todos.md
 4. Repeat until done
 5. On context reset: read context.md + todos.md, resume from next unchecked item
+6. **Continue until all items are checked off - no stopping until complete**
+
+## Autonomous Processing
+
+Once setup is complete, processing runs autonomously:
+- You can walk away - the AI continues until all items are processed
+- Typical duration: 30 minutes to 2 hours depending on item count and complexity
+- Progress checkpoints: todos.md updates after each item
+- Natural pauses: Context resets happen automatically, AI resumes from todos.md
+- Completion signal: All todos.md items checked off, insights.md populated
+
+No babysitting required. The AI will work through the entire batch and report completion.
 
 ## Workflow
 
@@ -86,7 +99,7 @@ List all items matching your criteria in the target location. Each item becomes 
 
 ### Initial Setup (Automatic)
 
-When you request bulk processing, Claude will:
+When you request bulk processing, the AI will:
 
 1. **Detect** the batch pattern from your request
 2. **Ask** if you want the three-file system
@@ -96,7 +109,7 @@ When you request bulk processing, Claude will:
    - `todos.md` - checklist of all items (unchecked)
    - `insights.md` - empty, ready for output
 
-You can also use the ready-to-use templates below - paste one, answer Claude's confirmation, and processing begins.
+You can also use the ready-to-use templates below - paste one, answer the AI's confirmation, and processing begins.
 
 ### Processing Loop
 
@@ -109,6 +122,8 @@ You can also use the ready-to-use templates below - paste one, answer Claude's c
 5. **Repeat**
 
 **Critical ordering:** Extract → Append → Check off. Never skip a step.
+
+**IMPORTANT:** Continue this loop until every item in todos.md is checked off. Do not stop early, do not ask for permission to continue, do not pause unless there's an error. Work through the complete batch.
 
 ### Handling Context Compaction
 
@@ -155,101 +170,215 @@ When context resets automatically:
 
 ### Template 1: Customer Language Extraction
 
-Use when: Extracting emotional language from sales calls, support transcripts, or customer conversations for marketing copy.
+**Business Context:**
+Extract real customer language from sales/support conversations to use in ad copy, landing pages, and marketing content. Beats assumptions and theory - these are actual phrases customers use when describing pain points. Directly applicable to copywriting, messaging, and positioning.
+
+**Use when:** Analyzing 5+ sales calls, prospect conversations, or support transcripts to find emotional language for marketing.
 
 ```
 GOAL:
-Analyze all transcripts in this directory. Extract phrases where customers describe problems, frustrations, stress, confusion, or pain points. Only include language showing genuine emotion (tone shifts, repeated mentions, explicit statements like "this is frustrating").
+I want you to analyze all the meeting transcripts in this directory. Extract phrases, questions, and statements where customers or prospects describe problems, frustrations, stress, confusion, or pain points. Only include language that shows genuine emotion or urgency - ignore casual mentions or theoretical scenarios.
 
-SETUP:
-[Claude will ask if you want three-file system - say yes]
+BEFORE YOU START:
+Create three files:
+
+1. context.md - Store this entire goal statement and the extraction criteria
+2. todos.md - Create a numbered checklist of every transcript file in this directory
+3. insights.md - This will store all extracted customer language, organized by emotional category (Frustration, Fear, Confusion, Stress, Pain Points)
+
+AS YOU WORK:
+- Process one transcript at a time
+- After processing each transcript, update insights.md with any relevant quotes (include the file name and approximate timestamp if available)
+- Immediately after updating insights.md, check off that transcript in todos.md
+- CRITICAL: Make sure todos.md is up to date BEFORE your memory resets
+
+AFTER YOUR MEMORY RESETS:
+- First, read context.md to remember your goal
+- Then, read todos.md to see which transcripts you've already completed
+- Continue processing from where you left off
 
 EXTRACTION RULES:
-- Only extract direct quotes (no paraphrasing)
-- Only statements tied to visible emotion
-- Categorize by: Frustration, Fear, Confusion, Stress, Pain Points
-- Include multiple categories if quote fits both
-- Ignore competitor discussion unless it reveals product gaps
-- Ignore feature requests
+- Only extract direct quotes - do not paraphrase
+- Only include statements tied to visible emotion (tone shifts, repeated mentions, explicit statements like "this is frustrating")
+- Categorize each quote by the primary emotion: Frustration, Fear, Confusion, Stress, or Pain Points
+- If a quote fits multiple categories, include it in both
+- Ignore any discussion about competitors unless it reveals our product's gaps
+- Ignore feature requests (we'll extract those separately)
 
-OUTPUT FORMAT (insights.md):
-Organize by category:
+OUTPUT FORMAT IN insights.md:
+Organize by category, with each quote including:
+- The exact quote
+- The source file name
+- Brief context (1 sentence max)
+
+Example:
 ## Frustration
-- "We've been manually doing this for six months" (transcript_042.txt - data entry workflow)
+- "We've been manually doing this for six months and it's killing us" (transcript_042.txt - discussing data entry workflow)
+- "Every time I try to export, the system times out" (transcript_018.txt - export feature complaint)
 
-Work until all todos.md items are checked off.
+## Confusion
+- "I don't understand why it works this way" (transcript_031.txt - questioning workflow logic)
+
+Work through all transcripts in this directory until complete. Do not stop until every file in todos.md is checked off.
 ```
 
 ### Template 2: Feature Request Aggregation
 
-Use when: Collecting product/service feature requests from customer conversations or feedback.
+**Business Context:**
+Build data-driven product roadmaps by aggregating feature requests from actual customer conversations. Identify most-requested features, understand urgency, and prioritize based on real demand rather than gut feel. Directly feeds into product planning and roadmap prioritization.
+
+**Use when:** Analyzing 5+ customer conversations, feedback sessions, or support interactions to identify feature requests and rank by demand.
 
 ```
 GOAL:
-Analyze all transcripts/documents. Extract feature requests, suggestions, or "I wish..." statements from customers.
+I want you to analyze all the transcripts/documents in this directory. Extract feature requests, suggestions, or "I wish..." statements from customers. Track frequency to identify the most commonly requested features.
 
-SETUP:
-[Claude will ask if you want three-file system - say yes]
+BEFORE YOU START:
+Create three files:
+
+1. context.md - Store this entire goal statement and the extraction criteria
+2. todos.md - Create a numbered checklist of every file in this directory
+3. insights.md - This will store all feature requests, organized by frequency and product area
+
+AS YOU WORK:
+- Process one file at a time
+- After processing each file, update insights.md with any feature requests (include exact quote, source file, and context)
+- Immediately after updating insights.md, check off that file in todos.md
+- CRITICAL: Make sure todos.md is up to date BEFORE your memory resets
+
+AFTER YOUR MEMORY RESETS:
+- First, read context.md to remember your goal
+- Then, read todos.md to see which files you've already completed
+- Continue processing from where you left off
 
 EXTRACTION RULES:
 - Extract requests, suggestions, wishes, or improvement ideas
-- Include exact quote and context
-- Note if mentioned by multiple customers (track frequency)
-- Categorize by product area if clear
-- Distinguish "must-have" from "nice-to-have" based on customer language
+- Include exact quote and surrounding context
+- Note if mentioned by multiple customers - track frequency as you go
+- Categorize by product area if clear from context
+- Distinguish "must-have" from "nice-to-have" based on customer language intensity
+- Track whether customer said they'd pay for it, or mentioned competitors having it
 
-OUTPUT FORMAT (insights.md):
-Organize by frequency or product area:
+OUTPUT FORMAT IN insights.md:
+Organize by frequency, then by product area:
+
+Example:
 ## High Frequency (3+ mentions)
-- "Bulk export feature" (ticket_023.txt, ticket_091.txt, transcript_15.txt - all mentioned CSV export)
+- "Bulk export to CSV" (ticket_023.txt, ticket_091.txt, transcript_15.txt - all mentioned needing CSV export for reporting)
+- "Two-factor authentication" (transcript_08.txt, transcript_22.txt, transcript_31.txt - security requirement, one mentioned competitor has it)
 
-Work until all todos.md items are checked off.
+## Medium Frequency (2 mentions)
+- "Dark mode interface" (ticket_045.txt, transcript_19.txt - both called it "nice to have")
+
+## Single Mentions - High Priority
+- "API access for automation" (transcript_12.txt - customer said they'd upgrade plan for this)
+
+Work through all files in this directory until complete. Do not stop until every file in todos.md is checked off.
 ```
 
 ### Template 3: Support Ticket Analysis
 
-Use when: Analyzing support tickets for recurring issues, root causes, or severity patterns.
+**Business Context:**
+Identify recurring technical issues, common failure patterns, and root causes from support tickets. Use findings to prioritize bug fixes, improve documentation, or redesign problematic workflows. Reduces support load by addressing systemic issues rather than treating symptoms.
+
+**Use when:** Analyzing 5+ support tickets to find patterns, recurring issues, or common root causes across customer problems.
 
 ```
 GOAL:
-Analyze all support tickets. Extract recurring issues, error patterns, and root causes. Categorize by severity and product area.
+I want you to analyze all the support tickets in this directory. Extract recurring issues, error patterns, and root causes. Categorize by severity and product area to identify what needs fixing most urgently.
 
-SETUP:
-[Claude will ask if you want three-file system - say yes]
+BEFORE YOU START:
+Create three files:
+
+1. context.md - Store this entire goal statement and the extraction criteria
+2. todos.md - Create a numbered checklist of every ticket file in this directory
+3. insights.md - This will store all issues, organized by severity and product area
+
+AS YOU WORK:
+- Process one ticket at a time
+- After processing each ticket, update insights.md with any issues (include severity, description, root cause if known, source ticket)
+- Immediately after updating insights.md, check off that ticket in todos.md
+- CRITICAL: Make sure todos.md is up to date BEFORE your memory resets
+
+AFTER YOUR MEMORY RESETS:
+- First, read context.md to remember your goal
+- Then, read todos.md to see which tickets you've already completed
+- Continue processing from where you left off
 
 EXTRACTION RULES:
 - Identify recurring error messages or failure patterns
-- Extract root cause if mentioned
-- Note workarounds used
-- Categorize severity: Critical (blocking), High (workflow impact), Medium (friction)
-- Track product area affected
+- Extract root cause if customer or support agent mentioned it
+- Note workarounds used (indicates pain points worth fixing properly)
+- Categorize severity: Critical (product blocking), High (workflow impact), Medium (friction/annoyance)
+- Track product area affected (authentication, export, API, etc.)
+- Note if multiple tickets mention the same issue - track frequency
 
-OUTPUT FORMAT (insights.md):
-Organize by severity and area:
+OUTPUT FORMAT IN insights.md:
+Organize by severity, then by product area:
+
+Example:
 ## Critical - Authentication
-- Login timeout after 2FA (ticket_034.txt - root cause: session timeout = 30s, 2FA takes 45s)
+- Login timeout after 2FA (ticket_034.txt, ticket_089.txt - root cause: session timeout = 30s but 2FA takes 45s, affects 2 customers)
+- Password reset emails not arriving (ticket_056.txt, ticket_071.txt, ticket_103.txt - spam filter issue, workaround: whitelist domain)
 
-Work until all todos.md items are checked off.
+## High - Export Feature
+- CSV export fails for datasets over 10k rows (ticket_042.txt, ticket_091.txt - timeout issue, workaround: split into smaller exports)
+
+## Medium - UI/UX
+- Confusing navigation in settings panel (ticket_015.txt - customer couldn't find API keys section)
+
+Work through all tickets in this directory until complete. Do not stop until every file in todos.md is checked off.
 ```
 
 ### Template 4: Generic Document Processing
 
-Use when: Processing any bulk documents for specific information extraction.
+**Business Context:**
+Flexible template for any bulk document processing task. Extract specific information, identify patterns, or transform data from 5+ similar documents. Adapt this template by filling in the bracketed sections with your specific extraction criteria.
+
+**Use when:** Processing 5+ documents of the same type (meeting notes, research papers, interview transcripts, reports, etc.) to extract specific information.
 
 ```
 GOAL:
-[Describe what you want to extract and from what type of documents]
+I want you to analyze all the [DOCUMENT TYPE] in this directory. Extract [SPECIFIC INFORMATION YOU WANT]. Focus on [WHAT MATTERS MOST] and ignore [WHAT TO SKIP].
 
-SETUP:
-[Claude will ask if you want three-file system - say yes]
+BEFORE YOU START:
+Create three files:
+
+1. context.md - Store this entire goal statement and the extraction criteria
+2. todos.md - Create a numbered checklist of every file in this directory
+3. insights.md - This will store all extracted information, organized by [YOUR CATEGORIES]
+
+AS YOU WORK:
+- Process one document at a time
+- After processing each document, update insights.md with extracted information (include source file name and brief context)
+- Immediately after updating insights.md, check off that document in todos.md
+- CRITICAL: Make sure todos.md is up to date BEFORE your memory resets
+
+AFTER YOUR MEMORY RESETS:
+- First, read context.md to remember your goal
+- Then, read todos.md to see which documents you've already completed
+- Continue processing from where you left off
 
 EXTRACTION RULES:
-[List your specific criteria - what to extract, what to ignore, how to categorize]
+[List your specific criteria - examples:]
+- Extract only [SPECIFIC TYPE OF INFORMATION]
+- Include [REQUIRED DETAILS] with each finding
+- Categorize by [YOUR CATEGORIES]
+- Track frequency if same item appears multiple times
+- Ignore [WHAT TO SKIP]
 
-OUTPUT FORMAT (insights.md):
-[Describe how findings should be organized]
+OUTPUT FORMAT IN insights.md:
+Organize by [YOUR ORGANIZATION SCHEME]:
 
-Work until all todos.md items are checked off.
+Example:
+## [CATEGORY 1]
+- [Finding with details] (source_file.txt - brief context)
+- [Another finding] (another_file.txt - brief context)
+
+## [CATEGORY 2]
+- [Finding] (file.txt - context)
+
+Work through all documents in this directory until complete. Do not stop until every file in todos.md is checked off.
 ```
 
 ## Validation
@@ -268,6 +397,70 @@ Work until all todos.md items are checked off.
 - Spot-check 2-3 items: re-read source, verify extraction matches rules
 - Check insights.md format consistency
 - Verify categorization is consistent
+
+## Troubleshooting
+
+### Session Interrupted (You Stopped Mid-Batch)
+
+**Symptom:** You stopped the AI mid-processing and want to resume later.
+
+**Solution:**
+1. Check todos.md - find the first unchecked item
+2. Tell the AI: "Resume batch processing from todos.md - continue from the first unchecked item"
+3. The AI will read context.md + todos.md and continue
+
+**No data lost** - todos.md checkpoint shows exactly where to resume.
+
+### AI Stopped Before Completion
+
+**Symptom:** AI stopped processing but items remain unchecked in todos.md.
+
+**Possible causes:**
+- Permission prompt interrupted flow
+- Error reading a file
+- Context reset happened but AI didn't auto-resume
+
+**Solution:**
+1. Check todos.md - identify what's left
+2. Check insights.md - verify previous work is intact
+3. Tell the AI: "Continue batch processing - read context.md and todos.md, then resume"
+
+### Partial File Processing
+
+**Symptom:** You suspect a file was only partially processed before context reset.
+
+**Check:**
+1. Look in todos.md - is the file checked off?
+   - Checked off = fully processed
+   - Not checked off = not processed (safe to process now)
+
+**If somehow partial extraction happened:**
+1. Manually uncheck the item in todos.md: change `- [x]` to `- [ ]`
+2. Tell the AI to reprocess that specific file
+3. Review insights.md to remove duplicate/partial entries
+
+### Files Added After Starting
+
+**Symptom:** New files appeared in directory after batch processing started.
+
+**Solution:**
+1. Add new files to todos.md manually as unchecked items: `- [ ] new_file.txt`
+2. Tell the AI: "Continue processing - new items added to todos.md"
+3. The AI will process them in sequence
+
+### Quality Issues in Output
+
+**Symptom:** insights.md contains low-quality extractions or missed items.
+
+**Check:**
+1. Read context.md - are extraction rules clear and specific?
+2. Spot-check 2-3 files against insights.md entries
+3. Identify what's wrong (too broad, too narrow, wrong category)
+
+**Solution:**
+1. Update context.md with clearer extraction rules
+2. Mark problematic files as unchecked in todos.md
+3. Tell the AI: "Re-read context.md (updated rules) and reprocess unchecked items"
 
 ## Why This Works
 

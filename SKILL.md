@@ -105,6 +105,14 @@ When the AI encounters a request like:
 5. On context reset: read context.md + todos.md, resume from next unchecked item
 6. **Continue until all items are checked off - no stopping until complete**
 
+**Parallel Mode Pattern:**
+1. Coordinator spawns N subagents (1 per 10 items, max 5)
+2. Each subagent work-steals from todos.md:
+   - Find first `[ ]` item → claim as `[>]` → process → append to insights-N.md → mark `[x]`
+3. Coordinator monitors every 30 seconds: "X/Y complete (Z in-progress)"
+4. When all `[x]`: merge insights-1..N.md → insights.md
+5. On subagent failure: change `[>]` back to `[ ]`, other agents claim it
+
 ## Autonomous Processing
 
 Once setup is complete, processing runs autonomously:

@@ -63,11 +63,22 @@ When the AI encounters a request like:
 1. Recognize this as batch processing
 2. Ask user: "This looks like batch processing (5+ items requiring extraction/transformation). Should I set up the three-file system (context.md, todos.md, insights.md) to track progress across context resets?"
 3. If yes:
+   - Count items to process
+   - Ask: "Process sequentially (simpler) or in parallel (faster, uses more resources)?"
+4. **If sequential:**
    - Create context.md with their goal
-   - Enumerate files to create todos.md
+   - Enumerate files to create todos.md (format: `- [ ] filename`)
    - Create empty insights.md
-   - Begin processing loop
-   - **Work through all items until complete - do not stop until every item in todos.md is checked off**
+   - Begin sequential processing loop
+   - Work through all items until complete
+5. **If parallel:**
+   - Calculate N = min(ceil(item_count / 10), 5)
+   - Inform user: "Using N subagents for M items"
+   - Create context.md with their goal
+   - Enumerate files to create todos.md (format: `- [ ] filename`)
+   - Create empty insights-1.md through insights-N.md
+   - Spawn N subagents with work-stealing instructions
+   - Monitor progress, merge when complete
 
 ## Quick Reference
 

@@ -23,6 +23,27 @@ Batch processing is a structured system for processing multiple data items (file
 - One-pass analysis with no resumption
 - Work small enough to fit comfortably in context
 
+## Detection Pattern
+
+When you (Claude) encounter a request like:
+- "Analyze all the [files/transcripts/tickets] in [location]"
+- "Extract [information] from these [documents]"
+- "Process all [items] and find [patterns]"
+
+**Recognition signals:**
+- Multiple items (5+) to process
+- Extraction/transformation goal
+- Items in a directory or collection
+
+**Action:**
+1. Recognize this as batch processing
+2. Ask user: "This looks like batch processing (5+ items requiring extraction/transformation). Should I set up the three-file system (context.md, todos.md, insights.md) to track progress across context resets?"
+3. If yes:
+   - Create context.md with their goal
+   - Enumerate files to create todos.md
+   - Create empty insights.md
+   - Begin processing loop
+
 ## Quick Reference
 
 **Three files (auto-generated):**
@@ -39,17 +60,43 @@ Batch processing is a structured system for processing multiple data items (file
 
 ## Workflow
 
-### Initial Setup
+### Enumerating Files for todos.md
 
-Invoke the skill with your goal and extraction rules:
-```
-/batch-process "Extract customer pain points from all transcripts. Only include language tied to genuine emotion (tone shifts, repeated mentions, explicit statements). Categorize by: Frustration, Confusion, Stress."
+**Shell/CLI users:**
+```bash
+# All files of specific type
+find . -name "*.txt" -type f
+
+# Files in current directory only
+ls *.json
+
+# With full paths
+find /path/to/data -name "*.pdf" -type f
 ```
 
-The skill auto-generates:
-- `context.md` with your goal
-- `todos.md` with enumerated list of all files to process
-- `insights.md` (empty, ready for output)
+**Generic approach:**
+List all items matching your criteria in the target location. Each item becomes one line in todos.md as `- [ ] filename`.
+
+**todos.md format:**
+```markdown
+- [ ] transcript_01.txt
+- [ ] transcript_02.txt
+- [ ] data_report_march.json
+```
+
+### Initial Setup (Automatic)
+
+When you request bulk processing, Claude will:
+
+1. **Detect** the batch pattern from your request
+2. **Ask** if you want the three-file system
+3. **Enumerate** files matching your criteria
+4. **Create** three files:
+   - `context.md` - your goal and extraction rules
+   - `todos.md` - checklist of all items (unchecked)
+   - `insights.md` - empty, ready for output
+
+You can also use the ready-to-use templates below - paste one, answer Claude's confirmation, and processing begins.
 
 ### Processing Loop
 
@@ -104,46 +151,123 @@ When context resets automatically:
 
 **Trying to batch multiple formats** - Processing transcripts AND emails AND tickets in one session = different extraction rules = confused output. One batch type per session.
 
-## Example Prompt
+## Ready-to-Use Templates
 
-This template works for any bulk processing task. Adjust the extraction rules for your use case.
+### Template 1: Customer Language Extraction
+
+Use when: Extracting emotional language from sales calls, support transcripts, or customer conversations for marketing copy.
 
 ```
 GOAL:
-Analyze all the customer support tickets in this folder.
-Extract issues that caused customer frustration, confusion, or unmet needs.
-Categorize by severity: Critical (product blocking), High (workflow impact), Medium (minor friction).
+Analyze all transcripts in this directory. Extract phrases where customers describe problems, frustrations, stress, confusion, or pain points. Only include language showing genuine emotion (tone shifts, repeated mentions, explicit statements like "this is frustrating").
 
-BEFORE YOU START:
-Run: /batch-process
+SETUP:
+[Claude will ask if you want three-file system - say yes]
 
-This generates:
-- context.md: your goal and rules
-- todos.md: enumerated list of all tickets
-- insights.md: where extracted issues go
+EXTRACTION RULES:
+- Only extract direct quotes (no paraphrasing)
+- Only statements tied to visible emotion
+- Categorize by: Frustration, Fear, Confusion, Stress, Pain Points
+- Include multiple categories if quote fits both
+- Ignore competitor discussion unless it reveals product gaps
+- Ignore feature requests
 
-AS YOU WORK:
-- For each unchecked item in todos.md:
-  1. Read the file
-  2. Extract issues matching the criteria
-  3. Append to insights.md with: severity, issue description, source ticket name
-  4. Check off the item in todos.md
-  5. Move to next item
+OUTPUT FORMAT (insights.md):
+Organize by category:
+## Frustration
+- "We've been manually doing this for six months" (transcript_042.txt - data entry workflow)
 
-CRITICAL: Update todos.md BEFORE context resets.
+Work until all todos.md items are checked off.
+```
 
-Work through all items in todos.md until every line is checked off.
-When done, open insights.md for the complete output.
+### Template 2: Feature Request Aggregation
+
+Use when: Collecting product/service feature requests from customer conversations or feedback.
+
+```
+GOAL:
+Analyze all transcripts/documents. Extract feature requests, suggestions, or "I wish..." statements from customers.
+
+SETUP:
+[Claude will ask if you want three-file system - say yes]
+
+EXTRACTION RULES:
+- Extract requests, suggestions, wishes, or improvement ideas
+- Include exact quote and context
+- Note if mentioned by multiple customers (track frequency)
+- Categorize by product area if clear
+- Distinguish "must-have" from "nice-to-have" based on customer language
+
+OUTPUT FORMAT (insights.md):
+Organize by frequency or product area:
+## High Frequency (3+ mentions)
+- "Bulk export feature" (ticket_023.txt, ticket_091.txt, transcript_15.txt - all mentioned CSV export)
+
+Work until all todos.md items are checked off.
+```
+
+### Template 3: Support Ticket Analysis
+
+Use when: Analyzing support tickets for recurring issues, root causes, or severity patterns.
+
+```
+GOAL:
+Analyze all support tickets. Extract recurring issues, error patterns, and root causes. Categorize by severity and product area.
+
+SETUP:
+[Claude will ask if you want three-file system - say yes]
+
+EXTRACTION RULES:
+- Identify recurring error messages or failure patterns
+- Extract root cause if mentioned
+- Note workarounds used
+- Categorize severity: Critical (blocking), High (workflow impact), Medium (friction)
+- Track product area affected
+
+OUTPUT FORMAT (insights.md):
+Organize by severity and area:
+## Critical - Authentication
+- Login timeout after 2FA (ticket_034.txt - root cause: session timeout = 30s, 2FA takes 45s)
+
+Work until all todos.md items are checked off.
+```
+
+### Template 4: Generic Document Processing
+
+Use when: Processing any bulk documents for specific information extraction.
+
+```
+GOAL:
+[Describe what you want to extract and from what type of documents]
+
+SETUP:
+[Claude will ask if you want three-file system - say yes]
+
+EXTRACTION RULES:
+[List your specific criteria - what to extract, what to ignore, how to categorize]
+
+OUTPUT FORMAT (insights.md):
+[Describe how findings should be organized]
+
+Work until all todos.md items are checked off.
 ```
 
 ## Validation
 
-When done, verify:
-- All items in todos.md are checked off
-- insights.md has entries for every processed item
+**Completion checks (automatic):**
+- All items in todos.md checked off
+- insights.md has entries
 - Each insight includes source filename
 
-(Optional: spot-check 2-3 items by re-reading the source to verify extraction quality)
+**Reported at completion:**
+- Items processed: X/Y
+- Output location: insights.md
+- Time elapsed (if available)
+
+**Optional quality checks:**
+- Spot-check 2-3 items: re-read source, verify extraction matches rules
+- Check insights.md format consistency
+- Verify categorization is consistent
 
 ## Why This Works
 

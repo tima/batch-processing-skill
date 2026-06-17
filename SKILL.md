@@ -274,6 +274,11 @@ When parallel mode is chosen, the workflow differs from sequential:
 - Executes work-stealing loop until no items remain
 - Writes findings to isolated insights-N.md
 - Reports completion when done
+- insights-N.md visible to user immediately (no wait for merge)
+- User can monitor quality by reading any insights-N.md at any time
+- Allows early error detection without stopping processing
+
+**Visibility:** insights-N.md files are immediately readable during processing. User can monitor quality at any time without waiting for merge completion.
 
 **Work-Stealing Protocol:**
 
@@ -388,6 +393,26 @@ If a subagent crashes:
 3. Changes back to `[ ]` (available for retry)
 4. Other running subagents claim and process these items
 5. No data lost, minimal delay
+
+**Incremental Results Visibility:**
+
+Unlike sequential mode (where insights.md updates after each item), parallel mode creates isolated insights-N.md files per subagent. These files are immediately readable - no need to wait for merge.
+
+**Monitoring during processing:**
+1. List insights files: `ls insights-*.md`
+2. Read any subagent's progress: `cat insights-3.md`
+3. Check quality of findings
+4. If errors found in insights-N.md:
+   - Identify which subagent (N)
+   - Check todos.md for items claimed by agent-N
+   - Stop that subagent if possible
+   - Update context.md with clearer rules
+   - Reset agent-N's items to `[ ]` for retry
+
+**Benefits:**
+- Early quality detection (don't wait for all 50 items to finish)
+- Per-subagent quality check (identify problematic extraction patterns)
+- User can track progress by checking file sizes: `ls -lh insights-*.md`
 
 **Resuming Interrupted Parallel Batch:**
 
@@ -556,6 +581,14 @@ After first 10 items processed in any batch:
    - Clear insights.md (or insights-*.md for parallel)
    - Restart with corrected rules
 4. **If validation passes:** Continue processing remaining items
+
+**Parallel mode early detection:**
+
+After first 10 items complete (check `grep -c '^\- \[x\]' todos.md`):
+1. List insights files: `ls insights-*.md`
+2. Read 2-3 insights-N.md files randomly
+3. Validate findings per standard checks
+4. If errors found: stop processing, update context.md, reset todos.md, restart
 
 **Why early detection matters:** 5% error rate on 100 items = 5 wasted items if caught early, 95 wasted items if caught at end.
 

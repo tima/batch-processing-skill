@@ -70,20 +70,46 @@ When the AI encounters a request like:
    - Ask: "Process sequentially (simpler) or in parallel (faster, uses more resources)?"
 
 4. **If sequential:**
-   - Create context.md with their goal
-   - Enumerate files to create todos.md (format: `- [ ] filename`)
-   - Create empty insights.md
-   - Begin sequential processing loop
-   - **Work through all items until complete**
+   - Offer: "Preview output first (dry-run on first 3 items) or process entire batch?"
+   - **If dry-run:**
+     - Create context.md with their goal
+     - Enumerate files to create todos.md
+     - Mark only first 3 items as active: `- [ ] file.txt # DRY-RUN`
+     - Create empty insights.md
+     - Process first 3 items
+     - Show insights.md to user
+     - Ask: "Does output format look correct? Adjust extraction rules or continue?"
+     - If adjust: update context.md, clear insights.md, reprocess 3 items
+     - If continue: remove # DRY-RUN markers, process remaining items
+   - **If full batch:**
+     - Create context.md with their goal
+     - Enumerate files to create todos.md (format: `- [ ] filename`)
+     - Create empty insights.md
+     - Begin sequential processing loop
+     - **Work through all items until complete**
 
 5. **If parallel:**
-   - Calculate N = min(ceil([item_count] / 10), 5)
-   - Inform user: "Using [N] subagents for [item_count] items"
-   - Create context.md with their goal
-   - Enumerate files to create todos.md (format: `- [ ] filename`)
-   - Create empty insights-1.md through insights-N.md
-   - Spawn N subagents with work-stealing instructions
-   - Monitor progress, merge when complete
+   - Offer: "Preview output first (dry-run on first 10 items) or process entire batch?"
+   - **If dry-run:**
+     - Create context.md with their goal
+     - Enumerate files to create todos.md
+     - Mark only first 10 items as active: `- [ ] file.txt # DRY-RUN`
+     - Calculate N = min(ceil(10 / 10), 5) = 1 subagent for dry-run
+     - Create empty insights-1.md
+     - Spawn 1 subagent to process first 10 items
+     - Merge to insights.md
+     - Show insights.md to user
+     - Ask: "Does output format look correct? Adjust extraction rules or continue?"
+     - If adjust: update context.md, reset first 10 items to `[ ]`, clear insights-1.md, reprocess
+     - If continue: remove # DRY-RUN markers, calculate full N, spawn remaining subagents, process all items
+   - **If full batch:**
+     - Calculate N = min(ceil([item_count] / 10), 5)
+     - Inform user: "Using [N] subagents for [item_count] items"
+     - Create context.md with their goal
+     - Enumerate files to create todos.md (format: `- [ ] filename`)
+     - Create empty insights-1.md through insights-N.md
+     - Spawn N subagents with work-stealing instructions
+     - Monitor progress, merge when complete
 
 6. Verify completion:
    - All todos.md items checked off
@@ -124,6 +150,12 @@ When the AI encounters a request like:
 3. Coordinator monitors every 30 seconds: "X/Y complete (Z in-progress)"
 4. When all `[x]`: merge insights-1..N.md → insights.md
 5. On subagent failure: change `[>]` back to `[ ]`, other agents claim it
+
+**Dry-Run Pattern:**
+1. AI offers: "Preview output first or process entire batch?"
+2. If preview: processes 3 items (sequential) or 10 items (parallel)
+3. Shows insights.md
+4. User adjusts rules or continues with full batch
 
 ## Autonomous Processing
 
@@ -175,6 +207,31 @@ When you request bulk processing, the AI will:
    - `insights.md` - empty, ready for output
 
 You can also use the ready-to-use templates below - paste one, answer the AI's confirmation, and processing begins.
+
+### Dry-Run Preview Mode
+
+For batches where you're unsure about extraction rules, dry-run mode processes a small sample first.
+
+**Sequential dry-run (3 items):**
+1. AI processes first 3 items from todos.md (marked `# DRY-RUN`)
+2. Shows insights.md output
+3. Asks: "Does this match your expectations? Adjust rules or continue?"
+4. If adjust: updates context.md, clears insights.md, reprocesses same 3 items
+5. If continue: removes # DRY-RUN markers, processes remaining items
+
+**Parallel dry-run (10 items):**
+1. AI spawns 1 subagent to process first 10 items (marked `# DRY-RUN`)
+2. Merges to insights.md
+3. Shows insights.md output
+4. Asks: "Does this match your expectations? Adjust rules or continue?"
+5. If adjust: updates context.md, resets first 10 to `[ ]`, reprocesses
+6. If continue: removes # DRY-RUN markers, spawns full N subagents, processes all items
+
+**When to use dry-run:**
+- First time using batch processing
+- Unclear extraction rules
+- Complex categorization requirements
+- High stakes (can't afford to reprocess entire batch)
 
 ### Parallel Processing Workflow
 

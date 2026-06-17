@@ -90,6 +90,18 @@ When the AI encounters a request like:
    - insights.md populated with extracted data
    - Report results to user
 
+7. **If resuming interrupted parallel batch:**
+   - Check for existing todos.md with mix of `[ ]`, `[>]`, and `[x]` items
+   - Count remaining: `remaining = count([ ]) + count([>])`
+   - Calculate N = min(ceil(remaining / 10), 5)
+   - Inform user: "Resuming parallel batch - [N] subagents for [remaining] remaining items"
+   - Read existing context.md (preserve original extraction rules)
+   - Clean up stale `[>]` items (if any subagent IDs no longer active)
+   - Identify highest existing insights-N.md number
+   - Create additional insights files if N > existing max
+   - Spawn N subagents with same work-stealing instructions
+   - Monitor and merge as normal
+
 ## Quick Reference
 
 **Three files (auto-generated):**
@@ -242,6 +254,35 @@ If a subagent crashes:
 3. Changes back to `[ ]` (available for retry)
 4. Other running subagents claim and process these items
 5. No data lost, minimal delay
+
+**Resuming Interrupted Parallel Batch:**
+
+If coordinator crashes or user stops processing mid-batch:
+
+1. **Check state:**
+   - todos.md exists with mix of states
+   - context.md exists (original extraction rules)
+   - Some insights-N.md files exist (partial work)
+
+2. **Calculate remaining work:**
+   ```bash
+   # Count unclaimed and in-progress items
+   remaining=$(grep -c '^\- \[ \]' todos.md)
+   in_progress=$(grep -c '^\- \[>\]' todos.md)
+   total_remaining=$((remaining + in_progress))
+   ```
+
+3. **Clean stale claims:**
+   - Any `[>] item.txt (agent-N)` where agent N is not running
+   - Change back to `[ ]` for retry
+
+4. **Resume:**
+   - Calculate N = min(ceil(total_remaining / 10), 5)
+   - Identify max existing insights-N.md number
+   - Create additional insights-M.md files if N > max (empty)
+   - Spawn N subagents
+   - Continue work-stealing from current todos.md state
+   - Merge all insights-*.md at completion (including partial files from first run)
 
 ### Processing Loop
 
@@ -618,6 +659,24 @@ with open("insights.md", "w") as out:
 **Solution:**
 - Wait for next 30s update - counts will sync
 - Manually count `[x]` items in todos.md to verify
+
+**Resume After Coordinator Crash**
+
+**Symptom:** Coordinator crashed mid-parallel batch, some items complete, some in-progress, some unclaimed.
+
+**State:**
+- todos.md has mix of `[ ]`, `[>]`, `[x]` items
+- context.md exists
+- Some insights-N.md files exist
+
+**Recovery:**
+1. Count remaining: `remaining = count([ ]) + count([>])`
+2. Calculate N = min(ceil(remaining / 10), 5)
+3. Clean stale `[>]` claims (change to `[ ]`)
+4. Identify max existing insights-N.md number
+5. Create additional insights files if needed (insights-M.md where M > max)
+6. Tell AI: "Resume parallel batch processing - read context.md and todos.md, spawn [N] subagents"
+7. AI will spawn subagents, work-steal remaining items, merge all insights-*.md
 
 ### Session Interrupted (You Stopped Mid-Batch)
 

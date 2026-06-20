@@ -52,21 +52,21 @@ See `templates/README.md` for usage instructions.
 
 ```bash
 # User scope — available in all sessions (recommended)
-npx skills add tima/batch-processing-skill -g
+npx skills add tima/batch-processing -g
 
 # Project scope — available in this project only
-npx skills add tima/batch-processing-skill
+npx skills add tima/batch-processing
 ```
 
 Target a specific agent:
 ```bash
-npx skills add tima/batch-processing-skill -g -a claude-code
+npx skills add tima/batch-processing -g -a claude-code
 ```
 
 Local development install:
 ```bash
-git clone https://github.com/tima/batch-processing-skill.git ~/projects/batch-processing-skill
-ln -sf ~/projects/batch-processing-skill ~/.claude/skills/batch-processing
+git clone https://github.com/tima/batch-processing.git ~/projects/batch-processing
+ln -sf ~/projects/batch-processing ~/.claude/skills/batch-processing
 ```
 
 ### Uninstall
